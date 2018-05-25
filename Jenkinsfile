@@ -6,11 +6,12 @@ pipeline {
     stages {
         stage('Create Workspace') {
             steps {
-                dir ('roles') {
+                dir ('roles/cloudbuilder') {
                   git url: 'https://github.com/network-devops/cloudbuilder.git'
                 }
             }
         }
+/*
         stage('Build Cloud') {
             steps {
                 echo 'Building Cloud...'
@@ -44,7 +45,6 @@ pipeline {
             }
         }
     }
-/*
     post {
         always {
             echo 'Destroying Cloud...'
