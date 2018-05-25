@@ -1,0 +1,25 @@
+---
+- name: Find the cloud model
+  set_fact:
+    cloud_model_file: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ cloud_model }}.yml"
+        - "{{ cloud_model }}.yaml"
+        - "{{ cloud_model }}"
+      paths:
+        - "{{ cloud_model_dir }}"
+        - "{{ playbook_dir }}"
+        - "{{ inventory_dir }}"
+
+- name: Read in the Cloud Model {{ cloud_model }}
+  include_vars:
+    file: "{{ cloud_model_file }}"
+
+- include_tasks: create.yml
+  vars:
+      cloud_vpc_name: "{{ vpc_item.name }}"
+      cloud_vpc_data: "{{ vpc_item }}"
+  with_items: "{{ vpc_list | default([]) }}"
+  loop_control:
+    loop_var: vpc_item

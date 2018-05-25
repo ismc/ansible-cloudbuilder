@@ -1,0 +1,11 @@
+---
+- name: Create the inventory directory
+  file:
+    path: "{{ cloud_inventory_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Create the inventory file on the local node
+  template:
+    src: inventory.yml.j2
+    dest: "{{ cloud_inventory_file }}"

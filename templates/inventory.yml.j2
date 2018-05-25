@@ -1,0 +1,38 @@
+all:
+  hosts:
+{% for host in hostvars.keys() %}
+    {{ host }}:
+      ansible_host: {{ hostvars[host].ansible_host }}
+      ansible_user: {{ hostvars[host].ansible_user }}
+{% if hostvars[host].ansible_network_os is defined and hostvars[host].ansible_network_os %}
+      ansible_network_os: {{ hostvars[host].ansible_network_os }}
+{% endif %}
+      private_ip_address: {{ hostvars[host].private_ip_address }}
+      groups: "{{ hostvars[host].group_names | join(',') }}"
+{% if hostvars[host].interfaces is defined and hostvars[host].interfaces %}
+      interfaces:
+        {{ hostvars[host].interfaces | to_nice_yaml | indent(8, False) }}
+{% endif %}
+{% endfor %}
+  children:
+{% for group in groups.keys() %}
+{% if (groups[group] | length) and (group != 'all') %}
+    {{ group }}:
+      hosts:
+{% for host in groups[group] %}
+        {{ host }}:
+{% endfor %}
+{% if group == cloud_instance %}
+      vars:
+        cloud_instance: {{ cloud_instance }}
+        cloud_provider: {{ cloud_provider }}
+        cloud_region: {{ cloud_region }}
+        cloud_model: {{ cloud_model }}
+        cloud_name: {{ cloud_name }}
+        cloud_cidr: {{ cloud_cidr }}
+{% elif default_group_vars[group] is defined %}
+      vars:
+        {{ default_group_vars[group] | to_nice_yaml | indent(8, False) }}
+{% endif %}
+{% endif %}
+{% endfor %}

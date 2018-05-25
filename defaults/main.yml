@@ -1,0 +1,73 @@
+---
+cloud_state: 'present'
+cloud_provider: 'aws'
+cloud_region: 'us-east-1'
+cloud_cidr: '10.0.0.0/16'
+cloud_model_dir: "{{ role_path }}/files/models"
+cloud_instance: "{{ cloud_model.split('.')[0] }}"
+cloud_project: "{{ lookup('env','USER') }}"
+cloud_inventory_root: "{{ lookup('env','PWD') | default(playbook_dir) }}/inventory"
+cloud_inventory_dir: "{{ cloud_inventory_root }}/{{ cloud_project }}"
+cloud_inventory_file: "{{ cloud_inventory_dir }}/{{ cloud_instance }}.yml"
+cloud_key_root: "{{ playbook_dir }}/keys"
+cloud_provider: 'aws'
+cloud_region: 'us-east-1'
+cloud_user: ec2-user
+cloud_name: "{{ cloud_instance }}.{{ cloud_project }}"
+cloud_key_name: "{{ opt_key_name | default(cloud_project) }}"
+cloud_private_key_file: "{{ key_root }}/{{ cloud_key_name }}.key"
+cloud_public_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
+cloud_public_key_material: "{{ lookup('file', cloud_public_key_file) }}"
+cloud_vars_file: "{{ inventory_root }}/{{ cloud_project }}/all-vars.yml"
+cloud_password: "Ansibull{{ lookup('password', '/dev/null chars=digits length=4') }}"
+cloud_instance_name_depth: 2
+interfaces_in_inventory: yes
+default_group_vars:
+  ios:
+    ansible_network_os: ios
+    ansible_connection: network_cli
+  junos:
+    ansible_network_os: junos
+    ansible_connection: netconf
+group_inventory_dict: {}
+
+cloud_image_map:
+  aws:
+    us-east-1:
+      csr-byol: ami-bcbfb9c7
+      centos7: ami-02e98f78
+      rhel7: ami-26ebbc5c
+    us-east-2:
+      csr-byol: ami-541e3931
+      rhel7: ami-0932686c
+    us-west-1:
+      csr-byol: ami-99e5d0f9
+      rhel7: ami-66eec506
+    us-west-2:
+      csr-byol: ami-e4d43d9c
+      rhel7:  ami-9fa343e7
+    ca-central-1:
+      csr-byol: ami-6269d706
+      centos7: ami-b111aad5
+      rhel7: ami-9062d0f4
+  azure:
+    rhel7:
+      offer: "RHEL"
+      publisher: "RedHat"
+      sku: "7-RAW"
+      version: latest
+    csr-byol:
+      offer: 'cisco-csr-1000v'
+      publisher: 'cisco'
+      product: 'cisco-csr-1000v'
+      name: '16_7'
+      sku: '16_7'
+      version: 'latest'
+
+cloud_size_map:
+  aws:
+    micro: t2.micro
+    medium: t2.medium
+  azure:
+    micro: Standard_A0
+    medium: Standard_D3_v2

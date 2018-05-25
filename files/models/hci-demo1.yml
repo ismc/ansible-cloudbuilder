@@ -1,0 +1,194 @@
+---
+demo_name: "{{ opt_name | default('hci_demo1') }}"
+demo_instance: "{{ opt_instance | default(lookup('env','USER')) }}"
+cloud_name: "{{ demo_name }}.{{ demo_instance }}"
+cloud_provider1: azure
+cloud_region1: eastus
+cloud_provider2: aws
+cloud_region2: us-east-1
+cloud_user: ec2-user
+ansible_ssh_private_key_file: "keys/{{ cloud_name }}_key"
+
+cloud_acls:
+  host-acl:
+    - { src_ip: 0.0.0.0/0, dst_ports: 22, proto: tcp }
+    - { src_ip: 0.0.0.0/0, dst_ports: 443, proto: tcp }
+#    - { src_ip: 0.0.0.0/0, proto: icmp }
+  rtr-acl:
+    - { src_ip: 0.0.0.0/0, proto: all }
+vpc_list:
+  - name: "vpc1.{{ cloud_name }}"
+    provider: "{{ cloud_provider1 }}"
+    region: "{{ cloud_region1 }}"
+    project: "{{ cloud_name }}"
+    cidr: 172.17.0.0/16
+    networks:
+      - name: "mgmt.vpc1.{{ cloud_name }}"
+        cidr: "172.17.0.0/24"
+        az: "{{ cloud_region1 }}a"
+      - name: "outside.vpc1.{{ cloud_name }}"
+        cidr: "172.17.1.0/24"
+        az: "{{ cloud_region1 }}a"
+        routes:
+          - cidr: "172.18.1.0/24"
+            instance: "rtr1.{{ cloud_name }}"
+            if_index: 1
+      - name: "inside.vpc1.{{ cloud_name }}"
+        cidr: "172.17.2.0/24"
+        az: "{{ cloud_region1 }}a"
+        routes:
+          - cidr: "0.0.0.0/0"
+            instance: "rtr1.{{ cloud_name }}"
+            if_index: 2
+    instances:
+      - name: "rtr1.{{ cloud_name }}"
+        size: large
+        image: csr-byol
+        interfaces:
+          - name: GigabitEthernet1
+            subnet: "mgmt.vpc1.{{ cloud_name }}"
+            acl: rtr-acl
+            public_ip: true
+            private_ip: 172.17.0.254
+          - name: GigabitEthernet2
+            subnet: "outside.vpc1.{{ cloud_name }}"
+            acl: rtr-acl
+            public_ip: true
+            private_ip: 172.17.1.254
+          - name: GigabitEthernet3
+            subnet: "inside.vpc1.{{ cloud_name }}"
+            acl: rtr-acl
+            private_ip: 172.17.2.254
+        tags:
+          Owner: student
+          network_os: ios
+          groups: network,routers
+        user_data: "{{ lookup('file', 'user-data/cisco-csr') }}"
+      - name: "control.{{ cloud_name }}"
+        size: medium
+        image: rhel7
+        key_name: "{{ cloud_name }}"
+        ansible_user: centos
+        # volume_size: 20
+        interfaces:
+          - name: eth0
+            subnet: "outside.vpc1.{{ cloud_name }}"
+            acl: host-acl
+            public_ip: true
+        tags:
+          Owner: student
+          groups: control
+  # - name: "vpc2.{{ cloud_name }}"
+  #   provider: "{{ cloud_provider2 }}"
+  #   region: "{{ cloud_region2 }}"
+  #   project: "{{ cloud_name }}"
+  #   cidr: 172.18.0.0/16
+  #   networks:
+  #     - name: "mgmt.vpc2.{{ cloud_name }}"
+  #       cidr: "172.18.0.0/24"
+  #       az: "{{ cloud_region2 }}b"
+  #     - name: "outside.vpc2.{{ cloud_name }}"
+  #       cidr: "172.18.1.0/24"
+  #       az: "{{ cloud_region2 }}b"
+  #     - name: "inside.vpc2.{{ cloud_name }}"
+  #       cidr: "172.18.2.0/24"
+  #       az: "{{ cloud_region2 }}b"
+  #       routes:
+  #         - cidr: "0.0.0.0/0"
+  #           instance: "rtr2.{{ cloud_name }}"
+  #           if_index: 2
+  #   instances:
+  #     - name: "rtr2.{{ cloud_name }}"
+  #       size: large
+  #       image: csr-byol
+  #       interfaces:
+  #         - name: GigabitEthernet1
+  #           subnet: "mgmt.vpc2.{{ cloud_name }}"
+  #           acl: rtr-acl
+  #           public_ip: true
+  #           private_ip: 172.18.0.254
+  #         - name: GigabitEthernet2
+  #           subnet: "outside.vpc2.{{ cloud_name }}"
+  #           acl: rtr-acl
+  #           public_ip: true
+  #           private_ip: 172.18.1.254
+  #         - name: GigabitEthernet3
+  #           subnet: "inside.vpc2.{{ cloud_name }}"
+  #           acl: rtr-acl
+  #           private_ip: 172.18.2.254
+  #       tags:
+  #         Owner: student
+  #         network_os: ios
+  #         groups: network,routers
+  #       user_data: "{{ lookup('file', 'user-data/cisco-csr') }}"
+  #     - name: "host1.{{ cloud_name }}"
+  #       size: micro
+  #       image: rhel7
+  #       ansible_user: centos
+  #       interfaces:
+  #         - name: eth0
+  #           subnet: "inside.vpc2.{{ cloud_name }}"
+  #           acl: host-acl
+  #       tags:
+  #         Owner: student
+  #         groups: hosts
+  #         groups: control
+group_vars:
+  all:
+    domain_name: localdomain
+    domain_search:
+      - localdomain
+      - example.com
+    name_servers:
+      - 8.8.8.8
+      - 8.8.4.4
+  control_nodes:
+    topo_checks:
+      - {src: 'control', dst: 'rtr1', proto: 'icmp'}
+      - {src: 'control', dst: 'rtr2', proto: 'icmp'}
+      - {src: 'rtr2', dst: 'host1', proto: 'icmp'}
+  routers:
+    network_tunnel_list:
+      - { index: 0, src_host: "rtr1", src_ip_addr: "10.255.0.1/30", dst_host: "rtr2", dst_ip_addr: "10.255.0.2/30" }
+
+cloud_image_map:
+  aws:
+    us-east-1:
+      csr-byol: ami-bcbfb9c7
+      centos7: ami-02e98f78
+      rhel7: ami-c998b6b2
+    us-east-2:
+      csr-byol: ami-541e3931
+      rhel7: ami-0932686c
+    us-west-1:
+      csr-byol: ami-99e5d0f9
+      rhel7: ami-66eec506
+    us-west-2:
+      csr-byol: ami-e4d43d9c
+      rhel7:  ami-9fa343e7
+    ca-central-1:
+      csr-byol: ami-6269d706
+      centos7: ami-b111aad5
+      rhel7: ami-9062d0f4
+  azure:
+    rhel7:
+      offer: "RHEL"
+      publisher: "RedHat"
+      sku: "7-RAW"
+      version: latest
+    csr-byol:
+      offer: 'cisco-csr-1000v'
+      publisher: 'cisco'
+      product: 'cisco-csr-1000v'
+      name: '16_7'
+      sku: '16_7'
+      version: 'latest'
+
+cloud_size_map:
+  aws:
+    micro: t2.micro
+    medium: t2.medium
+  azure:
+    micro: Standard_A0
+    medium: Standard_D2_v2
+    large: Standard_D3_v2

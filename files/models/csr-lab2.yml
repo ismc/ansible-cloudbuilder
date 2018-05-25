@@ -1,0 +1,152 @@
+---
+cloud_acls:
+  host-acl:
+    - { src_ip: 0.0.0.0/0, dst_ports: 22, proto: tcp }
+    - { src_ip: 0.0.0.0/0, dst_ports: 443, proto: tcp }
+    - { src_ip: 0.0.0.0/0, proto: icmp }
+  rtr-acl:
+    - { src_ip: 0.0.0.0/0, proto: all }
+vpc_list:
+  - name: "site1.{{ cloud_name }}"
+    provider: "{{ cloud_provider }}"
+    region: "{{ cloud_region }}"
+    project: "{{ cloud_name }}"
+    cidr: 10.1.0.0/16
+    networks:
+      - name: "mgmt.site1.{{ cloud_name }}"
+        cidr: "10.1.0.0/24"
+        az: "{{ cloud_region }}b"
+      - name: "outside.site1.{{ cloud_name }}"
+        cidr: "10.1.1.0/24"
+        az: "{{ cloud_region }}b"
+        routes:
+          - cidr: "10.0.2.0/24"
+            instance: "rtr.site1.{{ cloud_name }}"
+            if_index: 1
+      - name: "inside.site1.{{ cloud_name }}"
+        cidr: "10.1.2.0/24"
+        az: "{{ cloud_region }}b"
+        routes:
+          - cidr: "0.0.0.0/0"
+            instance: "rtr.{{ cloud_name }}"
+            if_index: 2
+    instances:
+      - name: "rtr.site1.{{ cloud_name }}"
+        size: medium
+        image: csr-byol
+        interfaces:
+          - name: GigabitEthernet1
+            subnet: "mgmt.site1.{{ cloud_name }}"
+            acl: rtr-acl
+            private_ip: 10.1.0.254
+            public_ip: true
+          - name: GigabitEthernet2
+            subnet: "outside.site1.{{ cloud_name }}"
+            acl: rtr-acl
+            private_ip: 10.1.1.254
+            public_ip: true
+          - name: GigabitEthernet3
+            subnet: "inside.site1.{{ cloud_name }}"
+            private_ip: 10.1.2.254
+            acl: rtr-acl
+        tags:
+          Owner: student
+          network_os: ios
+          groups: network, routers, spoke_routers
+        user_data_file: csr
+      - name: "host2.{{ cloud_name }}"
+        size: micro
+        image: centos7
+        ansible_user: centos
+        interfaces:
+          - name: eth0
+            subnet: "inside.site1.{{ cloud_name }}"
+            private_ip: 10.1.2.10
+            acl: host-acl
+        tags:
+          groups: hosts
+  - name: "hub.{{ cloud_name }}"
+    provider: "{{ cloud_provider }}"
+    region: "{{ cloud_region }}"
+    project: "{{ cloud_name }}"
+    cidr: 10.0.0.0/16
+    networks:
+      - name: "mgmt.hub.{{ cloud_name }}"
+        cidr: "10.0.0.0/24"
+        az: "{{ cloud_region }}a"
+      - name: "outside.hub.{{ cloud_name }}"
+        cidr: "10.0.1.0/24"
+        az: "{{ cloud_region }}a"
+        routes:
+          - cidr: "10.1.2.0/24"
+            instance: "rtr.{{ cloud_name }}"
+            if_index: 1
+      - name: "inside.hub.{{ cloud_name }}"
+        cidr: "10.0.2.0/24"
+        az: "{{ cloud_region }}a"
+        routes:
+          - cidr: "0.0.0.0/0"
+            instance: "rtr.{{ cloud_name }}"
+            if_index: 2
+    instances:
+      - name: "rtr.{{ cloud_name }}"
+        size: medium
+        image: csr-byol
+        interfaces:
+          - name: GigabitEthernet1
+            subnet: "mgmt.hub.{{ cloud_name }}"
+            acl: rtr-acl
+            private_ip: 10.0.0.254
+            public_ip: true
+          - name: GigabitEthernet2
+            subnet: "outside.hub.{{ cloud_name }}"
+            acl: rtr-acl
+            private_ip: 10.0.1.254
+            public_ip: true
+          - name: GigabitEthernet3
+            subnet: "inside.hub.{{ cloud_name }}"
+            private_ip: 10.0.2.254
+            acl: rtr-acl
+        tags:
+          Owner: student
+          network_os: ios
+          groups: network, routers, hub_routers
+        user_data_file: csr
+      - name: "host1.{{ cloud_name }}"
+        size: micro
+        image: centos7
+        ansible_user: centos
+        interfaces:
+          - name: eth0
+            subnet: "inside.hub.{{ cloud_name }}"
+            private_ip: 10.0.2.10
+            acl: host-acl
+        tags:
+          groups: hosts
+      - name: "control.{{ cloud_name }}"
+        size: medium
+        image: centos7
+        volume_size: 20
+        ansible_user: centos
+        interfaces:
+          - name: eth0
+            subnet: "mgmt.hub.{{ cloud_name }}"
+            acl: host-acl
+            private_ip: 10.0.0.10
+            public_ip: true
+        tags:
+          Owner: student
+          groups: control_hosts
+cloud_image_map:
+  aws:
+    us-east-1:
+      srx-payg: ami-ddb6f3a7
+      mx-byol: ami-e5a6839e
+      csr-byol: ami-bcbfb9c7
+      centos7: ami-02e98f78
+
+cloud_size_map:
+  aws:
+    micro: t2.micro
+    medium: t2.medium
+    xlarge: m4.xlarge

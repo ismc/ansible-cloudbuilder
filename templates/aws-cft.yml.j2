@@ -1,0 +1,264 @@
+{% set vpc_id = cloud_vpc_name | regex_replace('[^A-z0-9]', '') %}
+AWSTemplateFormatVersion: '2010-09-09'
+{#                                                                            #}
+{# VPC                                                                        #}
+{#                                                                            #}
+Resources:
+  {{ vpc_id }}:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: {{ cloud_vpc_data.cidr }}
+      Tags:
+      - Key: Name
+        Value: {{ cloud_vpc_name }}
+      - Key: Project
+        Value: {{ cloud_project }}
+      - Key: Instance
+        Value: {{ cloud_instance }}
+{% set igw_id = 'igw' + vpc_id %}
+  {{ igw_id }}:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: {{ cloud_vpc_name }}
+      - Key: Project
+        Value: {{ cloud_project }}
+      - Key: Instance
+        Value: {{ cloud_instance }}
+  gwa{{ vpc_id }}:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: {{ vpc_id }}
+      InternetGatewayId:
+        Ref: {{ igw_id }}
+{#                                                                            #}
+{# Networks                                                                   #}
+{#                                                                            #}
+{% for cloud_network_item in cloud_network_data %}
+{% set network_id = cloud_network_item.name | regex_replace('[^A-z0-9]', '') %}
+{% set rtb_id = 'rtb' + network_id %}
+  {{ network_id }}:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: {{ cloud_network_item.cidr }}
+      AvailabilityZone: {{ cloud_network_item.az }}
+      VpcId:
+        Ref: {{ vpc_id }}
+      Tags:
+      - Key: Name
+        Value: {{ cloud_network_item.name }}
+      - Key: Project
+        Value: {{ cloud_project }}
+      - Key: Instance
+        Value: {{ cloud_instance }}
+{#                                                                            #}
+{# Routes                                                                     #}
+{#                                                                            #}
+  {{ rtb_id }}:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: {{ vpc_id }}
+      Tags:
+      - Key: Name
+        Value: rtb.{{ cloud_network_item.name }}
+      - Key: Project
+        Value: {{ cloud_project }}
+      - Key: Instance
+        Value: {{ cloud_instance }}
+  rta{{ network_id }}:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: {{ rtb_id }}
+      SubnetId:
+        Ref: {{ network_id }}
+{% set flags = {'add_default_route': True} %}{# Add a default route if not covered #}
+{% for cloud_network_route_item in cloud_network_item.routes|default([]) %}
+{% if (cloud_network_route_item.cidr == '0.0.0.0/0') and (flags.update({'add_default_route': False})) %}
+{# This route covers default. It is a workaround to set flag outside the loop #}
+{% endif %}
+  {{ rtb_id }}{{ loop.index }}:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: {{ cloud_network_route_item.cidr }}
+      RouteTableId:
+        Ref: {{ rtb_id }}
+{% if cloud_network_route_item.instance is defined %}
+{% if cloud_network_route_item.if_index == 0 %}
+      InstanceId:
+        Ref: {{ cloud_network_route_item.instance | regex_replace('[^A-z0-9]', '') }}
+{% else %}{# cloud_network_route_item.if_index != 0 #}
+      NetworkInterfaceId:
+        Ref: {{ cloud_network_route_item.instance | regex_replace('[^A-z0-9]', '') }}{{ cloud_network_route_item.if_index }}
+{% endif %}{# cloud_network_route_item.if_index == 0 #}
+{% else %}{# cloud_network_route_item.instance not defined #}
+      GatewayId:
+        Ref: {{ igw_id }}
+{% endif %}{# cloud_network_route_item.instance is defined #}
+{% endfor %}{# cloud_network_route_item #}
+{% if flags['add_default_route'] %}
+  {{ rtb_id }}0:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId:
+        Ref: {{ rtb_id }}
+      GatewayId:
+        Ref: {{ igw_id }}
+{% endif %}{# add_default_route == "true" #}
+{% endfor %}{# cloud_network_item #}
+{#                                                                            #}
+{# Security Groups                                                            #}
+{#                                                                            #}
+{% for cloud_security_group_name, cloud_security_group_rules in cloud_security_group_data.iteritems() %}
+{% set sg_name = cloud_security_group_name | regex_replace('[^A-z0-9]', '') %}
+  {{ sg_name }}:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      Tags:
+      - Key: Name
+        Value: {{ cloud_security_group_name }}
+      - Key: Project
+        Value: {{ cloud_project }}
+      - Key: Instance
+        Value: {{ cloud_instance }}
+      GroupDescription: {{ cloud_security_group_name }}
+      VpcId:
+        Ref: {{ vpc_id }}
+{#                                                                            #}
+{# Security Group Rule                                                        #}
+{#                                                                            #}
+{% for cloud_security_group_rule in cloud_security_group_rules %}
+{% if cloud_security_group_rule.proto.lower() == 'icmp' %}
+{% set rule_from_port = '8' %}
+{% set rule_to_port = '-1' %}
+{% set rule_proto = 'icmp' %}
+{% elif cloud_security_group_rule.proto.lower() == 'all' %}
+{% set rule_from_port = '8' %}
+{% set rule_to_port = '-1' %}
+{% set rule_proto = '-1' %}
+{% else %}
+{% set rule_from_port = cloud_security_group_rule.dst_ports %}
+{% set rule_to_port = cloud_security_group_rule.dst_ports %}
+{% set rule_proto = cloud_security_group_rule.proto.lower() %}
+{% endif %}
+  {{ sg_name }}{{ loop.index }}:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: {{ sg_name }}
+      IpProtocol: {{ rule_proto }}
+      FromPort: {{ rule_from_port }}
+      ToPort: {{ rule_to_port }}
+      CidrIp: {{ cloud_security_group_rule.src_ip }}
+{% endfor %}{# cloud_security_group_rule #}
+{% endfor %}{# cloud_security_group_name #}
+{#                                                                            #}
+{# Instances                                                                  #}
+{#                                                                            #}
+{% for cloud_instance_item in cloud_instance_data %}
+{% set instance_id = cloud_instance_item.name | regex_replace('[^A-z0-9]', '') %}
+  {{ instance_id }}:
+    Type: AWS::EC2::Instance
+    Properties:
+      DisableApiTermination: 'false'
+      InstanceInitiatedShutdownBehavior: stop
+      ImageId: {{ cloud_image_map[cloud_provider][cloud_region][cloud_instance_item.image] }}
+      InstanceType: {{ cloud_size_map[cloud_provider][cloud_instance_item.size] }}
+      KeyName: {{ cloud_instance_item.key_name | default(cloud_key_name) }}
+      Monitoring: 'false'
+      Tags:
+      - Key: Name
+        Value: {{ cloud_instance_item.name }}
+      - Key: Project
+        Value: {{ cloud_project }}
+      - Key: Instance
+        Value: {{ cloud_instance }}
+      - Key: Role
+        Value: control.hub.scarter
+      - Key: cloud_project
+        Value: scarter
+      - Key: cloud_name
+        Value: hub.scarter
+{% for tag_key, tag_value in cloud_instance_item.tags.iteritems() %}
+      - Key: {{ tag_key }}
+        Value: {{ tag_value }}
+{% endfor %}{# cloud_instance_item.tags #}
+
+{#                                                                            #}
+{# Instance Storage                                                           #}
+{#                                                                            #}
+{% if cloud_instance_item.volume_size is defined %}
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            VolumeSize: {{ cloud_instance_item.volume_size }}
+{% endif %}{# cloud_instance_item.volume_size is defined #}
+{#                                                                            #}
+{# Instance Network Interfaces                                                #}
+{#                                                                            #}
+{% set cloud_interface_item = cloud_instance_item.interfaces[0] %}
+      NetworkInterfaces:
+      - DeviceIndex: 0
+        DeleteOnTermination: 'true'
+        SubnetId:
+          Ref: {{ cloud_interface_item.subnet | regex_replace('[^A-z0-9]', '') }}
+{% if cloud_interface_item.private_ip is defined %}
+        PrivateIpAddresses:
+        - PrivateIpAddress: {{ cloud_interface_item.private_ip }}
+          Primary: 'true'
+{% endif %}{# cloud_interface_item.private_ip #}
+        GroupSet:
+        - Ref: {{ cloud_interface_item.acl | regex_replace('[^A-z0-9]', '') }}
+{% if cloud_interface_item.public_ip | default(false) | bool %}
+        AssociatePublicIpAddress: 'true'
+{% endif %}{# cloud_interface_item.public_ip #}
+{#                                                                            #}
+{# Additional Instance Interfaces                                             #}
+{#                                                                            #}
+{% for interface_index in range(1, cloud_instance_item.interfaces|length) %}
+{% set cloud_interface_item = cloud_instance_item.interfaces[interface_index] %}
+  {{ instance_id }}{{ interface_index }}:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      Description: {{ cloud_instance_item.name }}.{{ interface_index }}
+      SourceDestCheck: 'false'
+      SubnetId:
+        Ref: {{ cloud_interface_item.subnet | regex_replace('[^A-z0-9]', '') }}
+{% if cloud_interface_item.private_ip is defined %}
+      PrivateIpAddresses:
+      - PrivateIpAddress: {{ cloud_interface_item.private_ip }}
+        Primary: 'true'
+{% endif %}{# cloud_interface_item.private_ip #}
+      GroupSet:
+      - Ref: {{ cloud_interface_item.acl | regex_replace('[^A-z0-9]', '') }}
+  eniattach{{ instance_id }}{{ interface_index }}:
+    Type: AWS::EC2::NetworkInterfaceAttachment
+    Properties:
+      DeviceIndex: {{ interface_index }}
+      NetworkInterfaceId:
+        Ref: {{ instance_id }}{{ interface_index }}
+      InstanceId:
+        Ref: {{ instance_id }}
+{% if cloud_interface_item.public_ip | default(false) | bool %}
+  eip{{ instance_id }}{{ interface_index }}:
+    Type: AWS::EC2::EIP
+    DependsOn:
+    - gwa{{ vpc_id }}
+    Properties:
+      Domain: vpc
+  eipassoc{{ instance_id }}{{ interface_index }}:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - eip{{ instance_id }}{{ interface_index }}
+        - AllocationId
+      NetworkInterfaceId:
+        Ref: {{ instance_id }}{{ interface_index }}
+{% endif %}{# cloud_interface_item.public_ip #}
+{% endfor %}{# interface_index #}
+{% endfor %}{# cloud_instance_data #}

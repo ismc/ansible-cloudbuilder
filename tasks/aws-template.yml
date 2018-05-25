@@ -1,0 +1,26 @@
+---
+- name: Create private key for {{ cloud_name }}
+  ec2_key:
+    aws_access_key: "{{ aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_secret_key | default(omit) }}"
+    region: "{{ cloud_vpc_data.region }}"
+    name: "{{ cloud_key_name }}"
+    key_material: "{{ cloud_public_key_material }}"
+    state: present
+
+- template:
+    src: aws-cft.yml.j2
+    dest: /tmp/{{ cloud_vpc_data.name }}-cft.yml
+
+- name: Create Stack {{ cloud_vpc_data.name }}
+  cloudformation:
+    stack_name: "{{ cloud_vpc_data.name | regex_replace('[^A-z0-9]', '') }}"
+    state: "present"
+    region: "{{ cloud_region }}"
+    disable_rollback: true
+    template_body: "{{ lookup('template', 'aws-cft.yml.j2') }}"
+    tags:
+      Stack: "{{ cloud_vpc_data.name }}"
+      Name: "{{ cloud_vpc_data.name }}"
+      Project: "{{ cloud_project }}"
+      Instance: "{{ cloud_instance }}"

@@ -1,0 +1,4 @@
+---
+- include_tasks: aws-networks.yml
+
+- include_tasks: aws-instances.yml
