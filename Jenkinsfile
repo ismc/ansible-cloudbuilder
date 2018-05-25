@@ -8,7 +8,7 @@ pipeline {
             steps {
                 dir ('roles') {
                     checkout([$class: 'GitSCM',
-                        branches: [[name: '*/master']], 
+                        branches: [[name: '*/master']],
                         doGenerateSubmoduleConfigurations: false,
                         extensions: [[$class: 'RelativeTargetDirectory',
                             relativeTargetDir: 'checkout-directory']],
@@ -60,6 +60,6 @@ pipeline {
             echo 'Cleaning Workspace...'
             deleteDir()
         }
-    }
 */
+    }
 }
