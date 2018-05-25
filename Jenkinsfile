@@ -6,8 +6,14 @@ pipeline {
     stages {
         stage('Create Workspace') {
             steps {
-                dir ('roles/cloudbuilder') {
-                  git url: 'https://github.com/network-devops/cloudbuilder.git'
+                dir ('roles') {
+                    checkout([$class: 'GitSCM',
+                        branches: [[name: '*/master']], 
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [[$class: 'RelativeTargetDirectory',
+                            relativeTargetDir: 'checkout-directory']],
+                        submoduleCfg: [],
+                        userRemoteConfigs: [[url: 'https://github.com/network-devops/cloudbuilder.git']]])
                 }
             }
         }
