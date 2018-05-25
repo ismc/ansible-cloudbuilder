@@ -30,6 +30,7 @@ all:
         cloud_model: {{ cloud_model }}
         cloud_name: {{ cloud_name }}
         cloud_cidr: {{ cloud_cidr }}
+        cloud_site_number: {{ cloud_site_number }}
 {% elif default_group_vars[group] is defined %}
       vars:
         {{ default_group_vars[group] | to_nice_yaml | indent(8, False) }}

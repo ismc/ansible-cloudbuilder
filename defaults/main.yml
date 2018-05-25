@@ -3,6 +3,7 @@ cloud_state: 'present'
 cloud_provider: 'aws'
 cloud_region: 'us-east-1'
 cloud_cidr: '10.0.0.0/16'
+cloud_site_number: 0
 cloud_model_dir: "{{ role_path }}/files/models"
 cloud_instance: "{{ cloud_model.split('.')[0] }}"
 cloud_project: "{{ lookup('env','USER') }}"
@@ -15,7 +16,7 @@ cloud_region: 'us-east-1'
 cloud_user: ec2-user
 cloud_name: "{{ cloud_instance }}.{{ cloud_project }}"
 cloud_key_name: "{{ opt_key_name | default(cloud_project) }}"
-cloud_private_key_file: "{{ key_root }}/{{ cloud_key_name }}.key"
+cloud_private_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa"
 cloud_public_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
 cloud_public_key_material: "{{ lookup('file', cloud_public_key_file) }}"
 cloud_vars_file: "{{ inventory_root }}/{{ cloud_project }}/all-vars.yml"
