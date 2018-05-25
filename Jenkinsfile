@@ -11,7 +11,7 @@ pipeline {
                         branches: [[name: '*/master']],
                         doGenerateSubmoduleConfigurations: false,
                         extensions: [[$class: 'RelativeTargetDirectory',
-                            relativeTargetDir: 'checkout-directory']],
+                            relativeTargetDir: 'cloudbuilder']],
                         submoduleCfg: [],
                         userRemoteConfigs: [[url: 'https://github.com/network-devops/cloudbuilder.git']]])
                 }
