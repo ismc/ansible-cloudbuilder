@@ -4,9 +4,9 @@ pipeline {
       skipDefaultCheckout true
     }
     environment {
-      ANSIBLE_ROLES_PATH = "${env.PWD} + '/roles'"
-      ANSIBLE_PRIVATE_KEY_FILE = "${env.PWD} + '/scarter-jenkins'"
-      ANSIBLE_PUBLIC_KEY_FILE = "${env.PWD} + '/scarter-jenkins.pub'"
+      ANSIBLE_ROLES_PATH = "pwd() + '/roles'"
+      ANSIBLE_PRIVATE_KEY_FILE = "pwd() + '/scarter-jenkins'"
+      ANSIBLE_PUBLIC_KEY_FILE = "pwd() + '/scarter-jenkins.pub'"
     }
     stages {
         stage('Create Workspace') {
