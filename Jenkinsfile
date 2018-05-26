@@ -8,7 +8,7 @@ pipeline {
       ANSIBLE_ROLES_PATH = "${env.WORKSPACE}/roles"
       ANSIBLE_PRIVATE_KEY_FILE = "${env.WORKSPACE}/scarter-jenkins"
       ANSIBLE_PUBLIC_KEY_FILE = "${env.WORKSPACE}/scarter-jenkins.pub"
-      ANSIBLE_INVENTORY_DIR "${env.WORKSPACE}/inventory"
+      ANSIBLE_INVENTORY_DIR = "${env.WORKSPACE}/inventory"
     }
     stages {
         stage('Create Workspace') {
