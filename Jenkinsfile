@@ -32,20 +32,24 @@ pipeline {
                 }
             }
         }
-
         stage('Run Tests') {
             steps {
-                echo 'Wait for the Routers to come up...'
-                ansiblePlaybook colorized: true, limit: 'network', disableHostKeyChecking: true, inventory: "${env.ANSIBLE_INVENTORY_DIR}", playbook: 'cloudbuilder/tests/check.yml'
+                echo 'Running Validation Tests...'
+                  ansiblePlaybook colorized: true, limit: 'network', disableHostKeyChecking: true, inventory: "${env.ANSIBLE_INVENTORY_DIR}", playbook: 'cloudbuilder/tests/check.yml'
+
+            }
+        }
+        stage('Destroy Cloud') {
+            steps {
+                echo 'Destroying Cloud...'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
+                    ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_project=scarter-jenkins", playbook: 'cloudbuilder/tests/clean.yml'
+                }
             }
         }
     }
     post {
         always {
-            echo 'Destroying Cloud...'
-            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
-              ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_project=scarter-jenkins", playbook: 'cloudbuilder/tests/clean.yml'
-            }
             echo 'Cleaning Workspace...'
             dir('inventory') {
               deleteDir()
