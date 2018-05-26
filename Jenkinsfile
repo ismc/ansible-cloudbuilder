@@ -20,7 +20,7 @@ pipeline {
                         relativeTargetDir: 'cloudbuilder']],
                     submoduleCfg: [],
                     userRemoteConfigs: [[url: 'https://github.com/network-devops/cloudbuilder.git']]])
-                sh 'if [ ! -f "/etc/bebebe" ]; then ssh-keygen -b 2048 -t rsa -f $ANSIBLE_PRIVATE_KEY_FILE -I scarter-jenkins -q -N ""; fi '
+                sh 'if [ ! -f $ANSIBLE_PRIVATE_KEY_FILE ]; then ssh-keygen -b 2048 -t rsa -f $ANSIBLE_PRIVATE_KEY_FILE -I scarter-jenkins -q -N ""; fi'
             }
         }
         stage('Build Cloud') {
