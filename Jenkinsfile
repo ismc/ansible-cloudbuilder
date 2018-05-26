@@ -15,6 +15,7 @@ pipeline {
                         submoduleCfg: [],
                         userRemoteConfigs: [[url: 'https://github.com/network-devops/cloudbuilder.git']]])
                 }
+                sh 'ssh-keygen -b 2048 -t rsa -f scarter-jenkins -I scarter-jenkins -q -N ""'
             }
         }
 /*
@@ -22,10 +23,11 @@ pipeline {
             steps {
                 echo 'Building Cloud...'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
-                  ansiblePlaybook colorized: true, disableHostKeyChecking: true, extras: '-e cloud_model=an-demo1 -e cloud_project=scarter-jenkins', playbook: 'build-demo.yml'
+                  ansiblePlaybook colorized: true, extras: '-e cloud_model=test -e cloud_project=scarter-jenkins', playbook: 'roles/cloudbuilder/tests/build-cloud.yml'
                 }
             }
         }
+
         stage('Run Tests') {
             steps {
                 echo 'Wait for the Routers to come up...'
