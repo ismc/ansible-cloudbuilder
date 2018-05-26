@@ -22,7 +22,7 @@ pipeline {
                         submoduleCfg: [],
                         userRemoteConfigs: [[url: 'https://github.com/network-devops/cloudbuilder.git']]])
                 }
-                sh 'rm -f scarter-jenkins* && ssh-keygen -b 2048 -t rsa -f scarter-jenkins -I scarter-jenkins -q -N ""'
+                sh 'if [ ! -f "/etc/bebebe" ]; then ssh-keygen -b 2048 -t rsa -f $ANSIBLE_PRIVATE_KEY_FILE -I scarter-jenkins -q -N ""; fi '
             }
         }
         stage('Build Cloud') {
@@ -30,7 +30,7 @@ pipeline {
                 echo 'Building Cloud...'
                 sh 'printenv'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
-                  ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_public_key_file=${env.ANSIBLE_PUBLIC_KEY_FILE} -e cloud_inventory_dir=${env.ANSIBLE_INVENTORY_DIR} -e cloud_project=scarter-jenkins", playbook: 'roles/cloudbuilder/tests/build-cloud.yml'
+                  ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_public_key_file=${env.ANSIBLE_PUBLIC_KEY_FILE} -e cloud_inventory_dir=${env.ANSIBLE_INVENTORY_DIR} -e cloud_project=scarter-jenkins", playbook: 'cloudbuilder/tests/test.yml'
                 }
             }
         }
