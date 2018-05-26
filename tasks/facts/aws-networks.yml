@@ -42,6 +42,3 @@
     cloud_security_group_map: "{{ cloud_security_group_map | combine( {item.tags.Name: item} ) }}"
   when: item.tags.Name is defined
   with_items: "{{ security_group_facts.security_groups }}"
-
-- debug: var=cloud_subnet_facts
-- debug: var=cloud_security_group_map
