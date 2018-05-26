@@ -1,10 +1,11 @@
 pipeline {
     agent any
+    def workspace = pwd()
     options {
       skipDefaultCheckout true
     }
     environment {
-      ANSIBLE_ROLES_PATH = './roles'
+      ANSIBLE_ROLES_PATH = "${env.PWD + '/roles'}"
     }
     stages {
         stage('Create Workspace') {
@@ -26,7 +27,7 @@ pipeline {
                 echo 'Building Cloud...'
                 sh 'printenv'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
-                  ansiblePlaybook colorized: true, extras: '-e cloud_model=test -e cloud_project=scarter-jenkins -e cloud_public_key_file=scarter-jenkins', playbook: 'roles/cloudbuilder/tests/build-cloud.yml'
+                  ansiblePlaybook colorized: true, extras: '-e cloud_model=test -e cloud_project="${env.PWD + '/scarter-jenkins.pub'}" -e cloud_public_key_file=scarter-jenkins', playbook: 'roles/cloudbuilder/tests/build-cloud.yml'
                 }
             }
         }
