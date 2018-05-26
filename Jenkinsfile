@@ -28,7 +28,7 @@ pipeline {
                 echo 'Building Cloud...'
                 sh 'printenv'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
-                  ansiblePlaybook colorized: true, extras: '-e cloud_model=test -e cloud_public_key_file="${env.ANSIBLE_PUBLIC_KEY_FILE}" -e cloud_project=scarter-jenkins', playbook: 'roles/cloudbuilder/tests/build-cloud.yml'
+                  ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_public_key_file=${env.ANSIBLE_PUBLIC_KEY_FILE} -e cloud_project=scarter-jenkins", playbook: 'roles/cloudbuilder/tests/build-cloud.yml'
                 }
             }
         }
