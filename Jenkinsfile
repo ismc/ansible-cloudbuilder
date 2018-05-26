@@ -15,7 +15,7 @@ pipeline {
                         submoduleCfg: [],
                         userRemoteConfigs: [[url: 'https://github.com/network-devops/cloudbuilder.git']]])
                 }
-                sh 'ssh-keygen -b 2048 -t rsa -f scarter-jenkins -I scarter-jenkins -q -N ""'
+                sh 'rm -f scarter-jenkins.* && ssh-keygen -b 2048 -t rsa -f scarter-jenkins -I scarter-jenkins -q -N ""'
             }
         }
         stage('Build Cloud') {
