@@ -18,7 +18,6 @@ pipeline {
                 sh 'ssh-keygen -b 2048 -t rsa -f scarter-jenkins -I scarter-jenkins -q -N ""'
             }
         }
-/*
         stage('Build Cloud') {
             steps {
                 echo 'Building Cloud...'
@@ -27,7 +26,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('Run Tests') {
             steps {
                 echo 'Wait for the Routers to come up...'
