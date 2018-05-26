@@ -11,8 +11,6 @@ cloud_inventory_root: "{{ lookup('env','PWD') | default(playbook_dir) }}/invento
 cloud_inventory_dir: "{{ cloud_inventory_root }}/{{ cloud_project }}"
 cloud_inventory_file: "{{ cloud_inventory_dir }}/{{ cloud_instance }}.yml"
 cloud_key_root: "{{ playbook_dir }}/keys"
-cloud_provider: 'aws'
-cloud_region: 'us-east-1'
 cloud_user: ec2-user
 cloud_name: "{{ cloud_instance }}.{{ cloud_project }}"
 cloud_key_name: "{{ opt_key_name | default(cloud_project) }}"

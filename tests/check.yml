@@ -2,7 +2,7 @@
 - hosts: routers
   gather_facts: no
   tasks:
-    - name: Check for SSH prompt (timeout 10min)
+    - name: Wait for SSH prompt (timeout 10min)
       wait_for:
         port: 22
         host: "{{ ansible_host }}"

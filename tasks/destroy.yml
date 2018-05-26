@@ -1,0 +1,2 @@
+---
+- include_tasks: "destroy/{{ cloud_vpc_data.provider }}-template.yml"

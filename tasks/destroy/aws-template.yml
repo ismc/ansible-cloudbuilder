@@ -1,0 +1,11 @@
+---
+- name: Delete Stack {{ cloud_vpc_data.name }}
+  cloudformation:
+    stack_name: "{{ cloud_vpc_data.name | regex_replace('[^A-z0-9]', '') }}"
+    state: absent
+    region: "{{ cloud_region }}"
+    tags:
+      Stack: "{{ cloud_vpc_data.name }}"
+      Name: "{{ cloud_vpc_data.name }}"
+      Project: "{{ cloud_project }}"
+      Instance: "{{ cloud_instance }}"
