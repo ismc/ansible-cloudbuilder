@@ -16,7 +16,7 @@
   include_vars:
     file: "{{ cloud_model_file }}"
 
-- include_tasks: "destroy/{{ cloud_vpc_data.provider }}-template.yml"
+- include_tasks: "destroy/destroy-{{ cloud_vpc_data.provider }}.yml"
   vars:
       cloud_vpc_name: "{{ cloud_vpc_data.name }}"
       cloud_network_data: "{{ cloud_vpc_data.networks | default([]) }}"
