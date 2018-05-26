@@ -4,7 +4,7 @@ pipeline {
       skipDefaultCheckout true
     }
     environment {
-      ANSIBLE_ROLES_PATH = pwd()
+      ANSIBLE_ROLES_PATH = pwd() + '/roles'
     }
     stages {
         stage('Create Workspace') {
