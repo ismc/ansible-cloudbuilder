@@ -1,7 +1,8 @@
 pipeline {
     agent any
     options {
-      skipDefaultCheckout true
+      skipDefaultCheckout(true)
+      disableConcurrentBuilds(true)
       ansiColor('xterm')
     }
     environment {
