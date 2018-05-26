@@ -1,6 +1,5 @@
 pipeline {
     agent any
-    def workspace = pwd()
     options {
       skipDefaultCheckout true
     }
