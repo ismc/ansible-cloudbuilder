@@ -13,10 +13,9 @@ cloud_inventory_file: "{{ cloud_inventory_dir }}/{{ cloud_instance }}.yml"
 cloud_key_root: "{{ playbook_dir }}/keys"
 cloud_user: ec2-user
 cloud_name: "{{ cloud_instance }}.{{ cloud_project }}"
-cloud_key_name: "{{ opt_key_name | default(cloud_project) }}"
-cloud_private_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa"
-cloud_public_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
-cloud_public_key_material: "{{ lookup('file', cloud_public_key_file) }}"
+cloud_key_name: "{{ lookup('env','USER') }}"
+# Uncomment this to always use the user's default public key
+# cloud_public_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
 cloud_vars_file: "{{ inventory_root }}/{{ cloud_project }}/all-vars.yml"
 cloud_password: "Ansibull{{ lookup('password', '/dev/null chars=digits length=4') }}"
 cloud_instance_name_depth: 2

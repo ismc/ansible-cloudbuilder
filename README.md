@@ -18,8 +18,8 @@ Role Variables
 - `cloud_region`: The region of the cloud provider in which to deploy the model (DEFAULT: us-east-1)
 - `cloud_cidr` : The private subnet for the deployment in CIDR notation.
 - `cloud_site_number`: The site number (DEFAULT: 0)
-- `cloud_key_name`: The name of the key used/created (DEFAULT: `cloud_project`)
-- `cloud_public_key_file`: The name of the file containing the public key (DEFAULT: `~/.ssh/id_rsa.pub`)
+- `cloud_key_name`: The name of the key used/created (DEFAULT: username)
+- `cloud_public_key_file`: The name of the file containing the public key
 - `cloud_inventory_root`: The root where the inventories will be created (DEFAULT: `./inventory`)
 - `cloud_inventory_dir`: The directory where the inventory files will be created (DEFAULT: `cloud_inventory_root`/`cloud_project`)
 - `cloud_inventory_file`: The name of the inventory file (DEFAULT: `cloud_inventory_dir`/`cloud_instance`)

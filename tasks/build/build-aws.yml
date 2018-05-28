@@ -5,8 +5,10 @@
     aws_secret_key: "{{ aws_secret_key | default(omit) }}"
     region: "{{ cloud_vpc_data.region }}"
     name: "{{ cloud_key_name }}"
-    key_material: "{{ cloud_public_key_material }}"
+    key_material: "{{ lookup('file', cloud_public_key_file) }}"
+    force: no
     state: present
+  when: (cloud_public_key_file is defined) and cloud_public_key_file
 
 - template:
     src: aws-cft.yml.j2
