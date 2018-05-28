@@ -24,6 +24,7 @@ Role Variables
 - `cloud_inventory_dir`: The directory where the inventory files will be created (DEFAULT: `cloud_inventory_root`/`cloud_project`)
 - `cloud_inventory_file`: The name of the inventory file (DEFAULT: `cloud_inventory_dir`/`cloud_instance`)
 
+
 Dependencies
 ------------
 
