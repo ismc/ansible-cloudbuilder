@@ -25,7 +25,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo 'Running Validation Tests...'
-                  ansiblePlaybook credentialsId: 'scarter-jenkins_key', colorized: true, limit: 'network', disableHostKeyChecking: true, inventory: "${env.ANSIBLE_INVENTORY_DIR}", playbook: 'cloudbuilder/tests/check.yml'
+                  ansiblePlaybook credentialsId: 'scarter-jenkins_key', colorized: true, limit: 'network', disableHostKeyChecking: true, inventory: "${env.ANSIBLE_INVENTORY_DIR}", playbook: 'cloudbuilder/tests/test.yml'
 
             }
         }
@@ -33,7 +33,7 @@ pipeline {
             steps {
                 echo 'Destroying Cloud...'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
-                    ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_instance=jenkins-cloudbuilder -e cloud_project=scarter-jenkins", playbook: 'cloudbuilder/tests/clean.yml'
+                    ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_instance=jenkins-cloudbuilder -e cloud_project=scarter-jenkins", playbook: 'cloudbuilder/tests/destroy.yml'
                 }
             }
         }
