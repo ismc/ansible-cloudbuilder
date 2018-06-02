@@ -15,7 +15,8 @@ cloud_user: ec2-user
 cloud_name: "{{ cloud_instance }}.{{ cloud_project }}"
 cloud_key_name: "{{ lookup('env','USER') }}"
 cloud_key_force: no
-cloud_public_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
+# Specify cloud_public_key_file if you want to create the key. NOTE: Required for Azure
+# cloud_public_key_file: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
 cloud_vars_file: "{{ inventory_root }}/{{ cloud_project }}/all-vars.yml"
 cloud_password: "Ansibull{{ lookup('password', '/dev/null chars=digits length=4') }}"
 cloud_instance_name_depth: 2
