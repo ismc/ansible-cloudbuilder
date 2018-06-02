@@ -6,7 +6,7 @@
     region: "{{ cloud_vpc_data.region }}"
     name: "{{ cloud_key_name }}"
     key_material: "{{ lookup('file', cloud_public_key_file) }}"
-    force: no
+    force: "{{ cloud_key_force }}"
     state: present
   when: (cloud_public_key_file is defined) and cloud_public_key_file
 
