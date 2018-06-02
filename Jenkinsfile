@@ -1,7 +1,6 @@
 pipeline {
     agent any
     options {
-      skipDefaultCheckout()
       disableConcurrentBuilds()
       ansiColor('xterm')
     }
@@ -18,7 +17,6 @@ pipeline {
         stage('Build Cloud') {
             steps {
                 echo 'Building Cloud...'
-                sh 'printenv'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'Ansible (scarter)']]) {
                   ansiblePlaybook colorized: true, extras: "-e cloud_model=test -e cloud_inventory_dir=${env.ANSIBLE_INVENTORY_DIR} -e cloud_instance=jenkins-cloudbuilder -e cloud_project=scarter-jenkins -e cloud_key_name=scarter-jenkins", playbook: 'cloudbuilder/tests/build.yml'
                 }
