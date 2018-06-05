@@ -1,15 +1,12 @@
-Cloudbuilder
-=========
+# Cloudbuilder
 
 This is a roles for provisioning clouds nodes/vpcs/vnets.  It takes a model and creates that architecture in the cloud provider specified by that blueprint.
 
-Requirements
-------------
+## Requirements
 
 These playbooks assume that you have your cloud environment setup correctly for authentication.  For example, boto is required for AWS.
 
-Role Variables
---------------
+## Role Variables
 
 - `cloud_model`: The cloud model that you want to deploy into the specified cloud provider (required)
 - `cloud_project`: The name of the overall project. (DEFAULT: username)
@@ -25,13 +22,11 @@ Role Variables
 - `cloud_inventory_file`: The name of the inventory file (DEFAULT: `cloud_inventory_dir`/`cloud_instance`)
 
 
-Dependencies
-------------
+## Dependencies
 
 None.
 
-Example Playbook
-----------------
+## Example Playbook
 
     - hosts: localhost
       connection: local
@@ -62,12 +57,10 @@ Example Playbook
           tags:
             - inventory
 
-License
--------
+## License
 
 GPL-3
 
-Author Information
-------------------
+## Author Information
 
-- Steven Carter
+* Steven Carter
