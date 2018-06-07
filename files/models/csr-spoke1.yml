@@ -22,7 +22,7 @@ vpc_list:
         routes:
           - cidr: "0.0.0.0/0"
             instance: "rtr1.{{ cloud_name }}"
-            if_index: 2
+            if_index: 1
     instances:
       - name: "rtr1.{{ cloud_name }}"
         size: medium
@@ -41,7 +41,7 @@ vpc_list:
         tags:
           network_os: ios
           groups: network,routers,spoke_routers
-        user_data: "{{ lookup('file', 'csr.user_data') }}"
+        # user_data: "{{ lookup('file', 'csr.user_data') }}"
       - name: "host1.{{ cloud_name }}"
         size: micro
         image: rhel7
@@ -49,6 +49,6 @@ vpc_list:
           - name: eth0
             subnet: "inside.{{ cloud_name }}"
             acl: host-acl
-            private_ip: "{{ cloud_cidr | ipsubnet(24, 2) | ipaddr(10) | ipaddr('address') }}"
+            private_ip: "{{ cloud_cidr | ipsubnet(24, 1) | ipaddr(10) | ipaddr('address') }}"
         tags:
           groups: hosts
